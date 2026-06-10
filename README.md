@@ -1,66 +1,138 @@
+# LDRP: Lifelong Delivery Robot Routing Problems on Non-Grid Maps
 
-## 実行方法について
+LDRP is a configurable, Gym-based benchmark in which a team of delivery robots serves a continual stream of
+pickup-and-delivery tasks on a non-grid route network while avoiding collisions. A policy combines
+a **task-allocation** method with a **path-planning** method, and any pair can be swapped in.
+The environment extends the DRP benchmark of Ding et al. with an integrated allocation interface,
+a lifelong task stream, and a three-component task-management API.
+
+## Repository Layout
+
+| Path | Contents |
+| --- | --- |
+| `test.py` | Run one experiment condition (map × team size × planner × assigner) |
+| `run.py` | Batch runner sweeping multiple conditions in parallel (logs to `logs/`) |
+| `train.py` | Train MARL path planners (IQL/QMIX) via EPyMARL |
+| `runner.py` | Episode loop shared by `test.py` (reports task completion and execution time) |
+| `drpload_test.py` | Interactive GUI sanity check (see `src/main/README.md`) |
+| `src/main/` | The LDRP Gym environment (`drp_env`), maps (CSV), environment configs |
+| `src/all_policy/` | Path planners: `pbs.py` (prioritized planning, PP), `policy.py` (MARL model loader) |
+| `src/task_assign/` | Task allocation: `task_policy/random.py`, `task_policy/tp.py` (Token Passing) |
+| `src/config/default.yaml` | Experiment configuration used by `test.py` |
+| `src/epymarl/` | EPyMARL framework used for training the learning baselines |
+
+## Installation
+
+Requires Python 3.9+ (tested on 3.10; the pinned matplotlib/networkx versions do not support
+3.8). Clone or download this repository, then:
 
 ```
-git clone https://github.com/kaji-ou/LDRP.git
-pip install -e ./src/main/LDRP
-pip install -r ./src/main/LDRP/requirements.txt
+pip install -e ./src/main
+pip install -r requirements.txt
 ```
 
-`src/config/default.yaml`で1エピソードのステップ数や使用するマップやアルゴリズムなどを設定し，`test.py`を実行
+To train the learning baselines you also need the EPyMARL dependencies:
 
-タスクありの環境で実行する場合は`gym.make`の引数の`task_flag`を`True`にする．
-タスクリストを設定したい場合は`gym.make`の引数の`task_list`に用意したタスクリストを入れる．
+```
+pip install -r ./src/epymarl/requirements.txt
+```
 
-いろんな条件をまとめて実験したい場合は`run.py`を実行．
+## Running Benchmark Experiments
 
-## policyの実装について
-`src/policy`で，経路計画を`agents_action`，タスク割り当てを`task_assign`として
-`joint_action = {"pass": agents_action, "task": task_assign}`のようにする．
+Baseline methods map to code options as follows:
 
-`agents_action`は従来のDRPと同じ．長さがエージェント数となる配列で，各要素は各エージェントが進むノードを表す．
+| Method | Code option | Notes |
+| --- | --- | --- |
+| PP (fixed-priority prioritized planner) | `path_planner: "pbs"` | Search-based; no trained model needed |
+| IQL / QMIX | `path_planner: "iql"` / `"qmix"` | Loads a trained model (see below) |
+| SafeIQL / SafeQMIX | same as above + `safe_mode: true` | Safety layer replaces colliding actions |
+| Random | `task_assigner: "random"` | Legacy alias: `"fifo"` |
+| Token Passing (TP) | `task_assigner: "tp"` | |
 
-`task_assign`は長さがエージェント数となる配列で，各要素は各エージェントにタスクリスト`env.current_tasklist`の何番目のタスクを割当てるかを表す．
+Representative evaluation maps are `map_5x4` and `map_8x5` (simple maps with many short edges)
+and `map_aoba00` and `map_aoba01` (complex maps with fewer but longer edges). More maps are
+available under `src/main/drp_env/map/`; a map is defined by CSV node/edge files, so new maps
+need no code changes.
 
-タスクを未実行状態のエージェントにのみ，新たにタスクを割当てることが可能．
-割り当てを行わない場合は-1を入れる．
+To run a single condition, edit `src/config/default.yaml` (map, team size, planner, assigner,
+`safe_mode`, episode count `test_num`) and run:
 
-例）タスクリスト`[[1,2],[5,3],[8,9]]`が存在し，エージェントへの割り当てを`[1,0,-1]`とすると，エージェント0にタスク[5,3]，エージェント1にタスク[1,2]を割当て，エージェント2にはタスクを割り当てない．
+```
+python3 test.py
+```
 
+or override map/team/planner/assigner from the command line:
 
-`PolicyManager`は経路計画を`TaskManager`はタスク割当てをまとめているため利用可能
+```
+python3 test.py map_8x5 4 pbs tp
+```
 
-- タスクに関する情報
-	- `env.current_tasklist`：現在のすべての未実行状態のタスクのリスト  
-	（例：タスク数3，`[[1,2],[5,3],[8,9]]`）
-	- `env.assigned_list`：未実行のタスクがどのエージェントに割り当てられているかのリスト．割り当てられていない場合は-1  
-	（例：タスク数3，タスク0はエージェント1に，タスク1はエージェント0に割り当てられており，タスク2は割り当てられていない．`[1,0,-1]`）
-	- `env.assigned_tasks`：各エージェントに割り当てられたタスクの情報．実行中のものも含む  
-	（例：エージェント数3，エージェント0，1はタスクを割当てられており，エージェント2はタスクを割り当てられていない．`[[1,2],[3,4],[]]`）
+The script prints average **task completion** (TC) and average **execution time** (ET) per
+episode. For stable numbers, average many episodes per condition (e.g., `test_num: 1000`) and,
+for the learning methods, multiple independently trained models.
 
-## タスク生成と処理について
-タスクは各ステップで`env.current_tasklist`に追加される．
-いつ，どんなタスクが追加されるかはエピソード開始時に決定する．
-タスクリストを設定したい場合は`gym.make`の引数の`task_list`に用意したタスクリストを入れる．
+To sweep many conditions as a batch experiment, edit the lists at the top of `run.py` and run
+`python3 run.py`; per-condition logs are written under `logs/`.
 
-### タスク処理の流れ
-タスク割当て &rarr; エージェントがピックアップ場所へ向かう &rarr; タスクをピックアップする（実行開始）
- &rarr; タスクを配達場所まで届ける &rarr; 配達完了　&rarr; 次の割り当てを待つ
+### Trained Models
 
+Model weights are not bundled. Train IQL/QMIX with EPyMARL — `train.py` shows the invocation
+(edit the `env_args.key` to choose map/team size; `drp_safe-*` keys train with the safety
+layer) — then place the resulting weights at:
 
-## 学習方法，モデルの適用について
-epymarlを利用して学習したモデルを利用可能
+```
+src/all_policy/models/safe/<map_name>_<agent_num>_<path_planner>.th   (e.g. map_8x5_4_qmix.th)
+```
 
-`src/all_policy/policy.py`内の`MARLPolicy`クラスでモデルのパスやファイル名を自身で指定することで利用可能
+which is where the `MARLPolicy` class in `src/all_policy/policy.py` loads them from.
 
-## drp_env.pyの変更箇所について
+## About the Policy Implementation
 
-- pbsのために200行目を変更した点は強化学習の際に影響があるかもしれないため注意
-- 継続型の問題の際には，エージェントが目的地についている状態でもエージェントの`avail_actions`がゴールノードに固定されないように変更
+A policy returns a joint action combining path planning (`agents_action`) and task assignment
+(`task_assign`), as in `src/policy.py`:
+`joint_action = {"pass": agents_action, "task": task_assign}`.
 
-## pbsについて
-探索手法ですが，
-- 順番に動かしてエージェントの動きを決めているため，他のエージェントが道を封鎖すること
-- drpはエージェントの行動の自由度が低いこと
+`agents_action` is the same as in the conventional DRP. It is an array whose length equals the number of agents, and each element indicates the node that the corresponding agent moves to.
 
-などの理由で，衝突しない経路が発見できないことがあります．
+`task_assign` is an array whose length equals the number of agents, and each element indicates which task (by index) in the task list `env.current_tasklist` is assigned to the corresponding agent.
+
+A new task can only be assigned to an agent that is not currently executing a task.
+Use -1 to indicate that no assignment is made.
+
+Example) Given the task list `[[1,2],[5,3],[8,9]]` and the assignment `[1,0,-1]`, task [5,3] is assigned to agent 0 and task [1,2] is assigned to agent 1, while agent 2 is not assigned any task.
+
+`PolicyManager` (`src/all_policy/policy_manager.py`) handles path planning and `TaskManager`
+(`src/task_assign/task_manager.py`) handles task assignment, so both are available for use.
+
+- Task-related information
+	- `env.current_tasklist`: the list of all currently unexecuted tasks
+	(e.g., 3 tasks, `[[1,2],[5,3],[8,9]]`)
+	- `env.assigned_list`: the list of which agent each unexecuted task is assigned to; -1 if unassigned
+	(e.g., 3 tasks; task 0 is assigned to agent 1, task 1 is assigned to agent 0, and task 2 is unassigned. `[1,0,-1]`)
+	- `env.assigned_tasks`: the task information assigned to each agent, including tasks currently being executed
+	(e.g., 3 agents; agents 0 and 1 have tasks assigned, agent 2 has none. `[[1,2],[3,4],[]]`)
+
+## About Task Generation and Processing
+
+Tasks are added to `env.current_tasklist` at each step.
+When and what kind of tasks are added is decided at the start of each episode, so runs are
+reproducible. To run in an environment with tasks enabled, set the `task_flag` argument of
+`gym.make` to `True`. To use your own task set instead of randomly generated tasks, pass your
+prepared task list to the `task_list` argument of `gym.make`.
+
+### Task Processing Flow
+Task assignment &rarr; the agent heads to the pickup location &rarr; the agent picks up the task (execution starts)
+ &rarr; the agent delivers the task to the delivery location &rarr; delivery complete &rarr; wait for the next assignment
+
+## About Changes to drp_env.py
+
+- Note that the change at line 200 made for pbs may affect reinforcement learning.
+- For continuing (non-terminating) problems, the change ensures that an agent's `avail_actions` is not fixed to the goal node even when the agent has reached its destination.
+
+## About pbs
+
+The `pbs` planner option implements classical prioritized planning with a fixed priority
+ordering (also referred to as PP, to distinguish it from full Priority-Based Search, which
+searches over priority orderings). Because it moves agents in priority order, other agents may block the
+path, and DRP allows agents little freedom of action, so it may occasionally fail to find a
+collision-free path.

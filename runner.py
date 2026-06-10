@@ -57,7 +57,7 @@ class Runner():
         done = False
         episode_score = 0
         env_step = 0
-        #実験用
+        #For experiments
         tmp_step = 0
         tmp_goal = self.env.goal_array.copy()
         self.tmp_flag = False
@@ -76,7 +76,7 @@ class Runner():
             
             done = all(terminated_n)
 
-            #報酬をバッファへ
+            #Push reward to the buffer
             if self.training:
                 self.task_manager.task_assigner.buffer_add_rewards(sum(rew_n), done)
 
@@ -115,7 +115,7 @@ class Runner():
     def run(self):
 
         step_tmp = 0
-        #強化学習用
+        #For reinforcement learning
         if self.training:
             self.task_Agent.task_assigner.set_test_mode(False)
             while self.current_step < self.max_step:
@@ -142,7 +142,7 @@ class Runner():
             self.test_mode = True
 
 
-        #実行ループ
+        #Execution loop
         times = []
         tmp_list = []
         self.info_buffer = deque(maxlen=self.test_num)
@@ -167,16 +167,16 @@ class Runner():
         non_lock_completion = [info["task_completion"] for idx, info in enumerate(self.info_buffer) if tmp_list[idx]==False]
 
         #print(full_completion)
-        #print("衝突なし:",np.mean(full_completion),len(full_completion))
+        #print("no collision:",np.mean(full_completion),len(full_completion))
         #print(non_lock_completion)
-        #print("ロックなし", np.mean(non_lock_completion), len(non_lock_completion))
+        #print("no lock:", np.mean(non_lock_completion), len(non_lock_completion))
         #print("Total test episodes:", len(self.info_buffer))
         #print("Average steps:", np.mean(steps))
         print("Average task completion:", np.mean(task_completion))
-        #print("最高値:",np.max(task_completion))
-        #print("最低値:",np.min(task_completion))
-        #print("実行時間:", np.sum(times), "秒")
-        print("平均実行時間:", np.mean(times), "秒")
+        #print("max:",np.max(task_completion))
+        #print("min:",np.min(task_completion))
+        #print("execution time:", np.sum(times), "sec")
+        print("average execution time:", np.mean(times), "sec")
 
         return
 

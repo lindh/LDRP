@@ -14,7 +14,7 @@ maxpurocesses = 5
 running_processes = []
 
 for i in range(num_runs):
-    #algとmap，実行step数確認，drp_envのpbs用の変更箇所
+    #Check alg, map, and number of steps; the change in drp_env for pbs
     #iql,aoba00,16050000,unsafe
     command = f'python3 src/epymarl/src/main.py --config=iql --env-config=gymma with env_args.time_limit=100 env_args.key="drp_env:drp-4agent_map_aoba00-v2" env_args.state_repre_flag="onehot_fov" > train_results/{i} 2>&1'
     proc = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)

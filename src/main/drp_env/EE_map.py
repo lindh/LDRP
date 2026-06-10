@@ -132,8 +132,8 @@ class MapMake():
 		G.add_nodes_from(csv_nodes_number)                                 
 		G.add_edges_from(csv_edges)
 		self.pos = csv_nodes_pos
-		G.add_weighted_edges_from(csv_edges_weights) #(始点，終点，重み)でエッジを設定
-		self.edge_labels = {(i, j): int(w['weight']) for i, j, w in G.edges(data=True)} #エッジラベルの描画時に'weight'の表示を無くすための工夫
+		G.add_weighted_edges_from(csv_edges_weights) #Set edges as (start, end, weight)
+		self.edge_labels = {(i, j): int(w['weight']) for i, j, w in G.edges(data=True)} #Trick to hide the 'weight' display when drawing edge labels
 		self.G=G
 
 
@@ -141,11 +141,11 @@ class MapMake():
 
 
 	def draw_weighted_graph(self, G ,pos):
-		nx.draw_networkx_nodes(G, pos, node_size=500, node_color='skyblue',edgecolors='skyblue') #ノードを描画
-		nx.draw_networkx_edges(G, pos, width=1) #エッジを描画
-		nx.draw_networkx_labels(G, pos) #（ノードの）ラベルを描画
-		nx.draw_networkx_edge_labels(G, pos, edge_labels=self.edge_labels) #エッジのラベルを描画
-		#nx.draw_networkx_node_labels(G, pos, node_labels=node_labels) #エッジのラベルを描画
+		nx.draw_networkx_nodes(G, pos, node_size=500, node_color='skyblue',edgecolors='skyblue') #Draw nodes
+		nx.draw_networkx_edges(G, pos, width=1) #Draw edges
+		nx.draw_networkx_labels(G, pos) #Draw (node) labels
+		nx.draw_networkx_edge_labels(G, pos, edge_labels=self.edge_labels) #Draw edge labels
+		#nx.draw_networkx_node_labels(G, pos, node_labels=node_labels) #Draw edge labels
 		nx.draw_networkx(self.G, with_labels = True,pos=self.pos,alpha=0.2, node_size=170, node_color='lightblue')
       
 
@@ -194,8 +194,8 @@ class MapMake():
 			
 			"""
 
-		#plt.xlim(-40,160) #x軸範囲指定
-		#plt.ylim(-10,185) #y軸範囲指定
+		#plt.xlim(-40,160) #Specify x-axis range
+		#plt.ylim(-10,185) #Specify y-axis range
 
 		#plt.gcf().text(0.02, 0.5, "reach_n:"+str(reach_account), fontsize=10)
 		self.ax3.text(-5, 0, "reach_n:"+str(reach_account), fontsize=10)
@@ -218,7 +218,7 @@ class MapMake():
 		"""
 
 		self.draw_weighted_graph(self.G, self.pos)
-		plt.grid() #グリッド
+		plt.grid() #Grid
 		#xtick=np.arange(-1,12, 1)
 		#plt.xticks(xtick)
 		plt.pause(delay)  #do not need 'plt.show()' to show
@@ -231,7 +231,7 @@ class MapMake():
 			#return ['null']
 			if not self.is_task_flag:
 				return [goal_i]
-			#継続型において，ゴールしていても動けるように変更
+			#For continuing problems, changed so the agent can move even after reaching the goal
 			else:
 				pass
 
@@ -288,7 +288,7 @@ class MapMake():
 		start_node = np.random.choice(G_nodes_copy)
 		G_nodes_copy.remove(start_node)
 		goal_node = np.random.choice(G_nodes_copy)
-		deadline = timelimit+1 #未実装
+		deadline = timelimit+1 #Not implemented
 		return [start_node, goal_node, deadline]
 
 	# create all tasklist
@@ -317,10 +317,10 @@ class MapMake():
 		return path_length
 
 	def get_near_nodes(self, node_num):
-		# ノード0からの距離を取得
+		# Get the distance from node 0
 		lengths = nx.single_source_dijkstra_path_length(self.G, source=node_num, weight='weight')
 
-		# 近い順に並び替え
+		# Sort in ascending order of distance
 		sorted_nodes = sorted(lengths.items(), key=lambda x: x[1])
 		nearest_nodes = [node for node, dist in sorted_nodes]
 

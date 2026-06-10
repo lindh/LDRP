@@ -1,0 +1,7 @@
+# Environment package dependencies (gym, matplotlib, networkx)
+-r src/main/requirements.txt
+
+# Experiment harness (test.py / run.py / runner.py)
+pyyaml
+torch>=2.0
+numpy<2  # gym 0.26.2 does not support NumPy 2.x

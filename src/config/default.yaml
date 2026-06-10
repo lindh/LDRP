@@ -1,22 +1,25 @@
-env_name: "drp_env:drp_safe-4agent_map_8x5-v2"
-#env_name: "drp_env:drp-5agent_map_8x5-v2"
+# Experiment configuration for test.py / run.py.
+# CLI override: python3 test.py <map_name> <agent_num> <path_planner> <task_assigner>
 
-agent_num: 3
-map_name: "map_3x3"
+# --- Environment ---
+map_name: "map_5x4"   # e.g. map_5x4, map_8x5, map_aoba00, map_aoba01 (see src/main/drp_env/map/)
+agent_num: 3          # team size
+time_limit: 1000      # step budget per episode
+safe_mode: false      # true = use the safety-layer environment (SafeIQL/SafeQMIX)
 
-task_assigner: "tp"
-path_planner: "pbs"
+# --- Policy ---
+task_assigner: "tp"   # "random" (legacy alias "fifo") | "tp" (Token Passing)
+path_planner: "pbs"   # "pbs" (prioritized planning, PP) | "iql" | "qmix" (the latter two need trained models)
 
-time_limit: 1000
+# --- Evaluation ---
+test_num: 1           # episodes per condition (use e.g. 1000 for stable averages)
 
-test_num: 1
-
+# --- Training hyperparameters (PPO task assigner; unused by the baselines above) ---
 n_envs: 8
 running_steps: 20000000
 buffer_size: 1024
 batch_size: 64
 epochs: 4
-
 learning_rate: 0.0003
 gamma: 0.99
 gae_lambda: 0.95

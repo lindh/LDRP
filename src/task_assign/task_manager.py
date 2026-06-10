@@ -5,8 +5,7 @@ from src.task_assign.task_policy.tp import TP
 
 class TaskManager():
     def __init__(self, name, args=None):
-        if name == "fifo":
-            #print("call fifo")
+        if name in ("random", "fifo"):  # "fifo" kept as a legacy alias
             self.task_assigner = Random()
         elif name == "tp":
             #print("call TP")

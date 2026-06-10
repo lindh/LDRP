@@ -1,8 +1,8 @@
 import torch 
 import numpy as np
 
-#from epymarl.src.modules.agents.rnn_agent import RNNAgent  # EPyMARLそのまま使う
-from .rnn_agent import RNNAgent  # ローカルのRNNAgentを使用
+#from epymarl.src.modules.agents.rnn_agent import RNNAgent  # use EPyMARL as is
+from .rnn_agent import RNNAgent  # use the local RNNAgent
 
 
 class DummyArgs:
@@ -25,7 +25,7 @@ class PolicyRunner:
         h_in = self.hidden_states[ag_idx]
 
         q_values, h_out = self.agent(obs_tensor, h_in)
-        self.hidden_states[ag_idx] = h_out.detach()  # detachでグラフ切って次に備える
+        self.hidden_states[ag_idx] = h_out.detach()  # detach to cut the graph and prepare for the next step
 
         q_numpy = q_values.squeeze(0).detach().numpy()
         masked_q = [q_numpy[a] if a in avail_actions else -np.inf for a in range(len(q_numpy))]

@@ -6,7 +6,7 @@ from os.path import dirname, abspath
 from copy import deepcopy
 
 #import sys
-#sys.path.append('/Users/km/anaconda3/envs/DRP_fit/lib/python3.8/site-packages')
+#sys.path.append('/path/to/site-packages')
 
 from sacred import Experiment, SETTINGS
 from sacred.observers import FileStorageObserver, MongoObserver

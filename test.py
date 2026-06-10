@@ -26,8 +26,10 @@ if __name__ == "__main__":
         config.path_planner = sys.argv[3]
         config.task_assigner = sys.argv[4]
 
-    env_name = "drp_env:drp-" + str(config.agent_num) + "agent_" + config.map_name + "-v2"
-    #env_name = "drp_env:drp_safe-" + str(config.agent_num) + "agent_" + config.map_name + "-v2"
+    # drp_safe-* wraps the policy in the collision-preventing safety layer
+    # (SafeIQL/SafeQMIX); drp-* is the plain environment.
+    env_prefix = "drp_safe" if getattr(config, "safe_mode", False) else "drp"
+    env_name = "drp_env:" + env_prefix + "-" + str(config.agent_num) + "agent_" + config.map_name + "-v2"
 
     env = gym.make(
         env_name,

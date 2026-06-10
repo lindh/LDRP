@@ -37,7 +37,7 @@ class Buffer():
         self.dones = []
 
     def add_actions(self, step_idx, state, action, log_prob, entropy, value):
-        #いっぱいでなければ追加
+        #Add if not full
         if len(self.steps) < self.buffer_size:
             self.steps.append(step_idx)
             self.states.append(state)
@@ -80,16 +80,16 @@ class Buffer():
         self.returns.extend(returns)
         self.reset_rewards()  # Clear rewards after computing returns
 
-    ###########################未実装
+    ###########################Not implemented
     def compute_returns_and_advantages(self, next_value, gamma=0.99, lam=0.95):
-        """GAEを使って，行動ステップに対応する advantage/return を計算"""
+        """Compute advantage/return corresponding to action steps using GAE"""
         T = len(self.rewards)
         values_full = [0.0] * (T + 1)
         for i, t in enumerate(self.action_steps):
             values_full[t] = self.values[i].item()
         values_full.append(next_value)
 
-        # GAE計算
+        # GAE computation
         advantages_full = [0.0] * T
         gae = 0.0
         for t in reversed(range(T)):
@@ -97,7 +97,7 @@ class Buffer():
             gae = delta + gamma * lam * (1 - self.dones[t]) * gae
             advantages_full[t] = gae
 
-        # 行動ステップだけ抽出
+        # Extract only action steps
         advantages = [advantages_full[t] for t in self.action_steps]
         returns = [adv + values_full[t] for t, adv in zip(self.action_steps, advantages)]
         return returns, advantages
@@ -236,21 +236,21 @@ class PPOAgent():
                 state = self.create_state(env, current_tasklist, assigned_tasklist)
                 state = torch.tensor(state, dtype=torch.float).to(self.device)
                 policy, value = self.model(state)
-                #マスク
-                #task持ちのエージェント
+                #Mask
+                #Agents holding a task
                 mask = torch.zeros_like(policy)
                 for i in range(env.n_agents):
                     if len(assigned_tasklist[i]) > 0:
                         agent_idx = env.task_num*i
                         mask[agent_idx:agent_idx+env.task_num] = 1
-                #task数が少ないとき
+                #When the number of tasks is small
                 for i in range(env.task_num):
                     if i > len(current_tasklist)-1:
                         mask_idx = []
                         for j in range(env.n_agents):
                             mask_idx.append(env.task_num * j + i)
                         mask[mask_idx] = 1
-                #使用済みのtask
+                #Used task
                 for i in range(len(current_tasklist)):
                     if current_tasklist[i][0] == -1:
                         mask_idx = []
@@ -261,9 +261,9 @@ class PPOAgent():
                 policy[mask == 1] = float('-inf')
                 policy = F.softmax(policy, dim=-1)
 
-                if self.test_mode:# 実行用
+                if self.test_mode:# For execution
                     action = policy.argmax().item()
-                else:# 学習用
+                else:# For training
                     dist = Categorical(policy)
                     action = dist.sample()
                     log_prob = dist.log_prob(action)
@@ -273,12 +273,12 @@ class PPOAgent():
 
                     self.buffer.add_actions(env.step_account, state, action, log_prob, entropy, value)
             
-                #actionをみてtask_assignを決定
-                #currentとassignedを更新
+                #Decide task_assign based on action
+                #Update current and assigned
                 q, r = divmod(action, env.task_num)
                 assigned_tasklist[q].append(current_tasklist[r])
                 task_assign[q] = r
-                current_tasklist[r][0] = -1  # タスクを割り当てたので、タスクリストから削除
+                current_tasklist[r][0] = -1  # Remove from the task list since the task has been assigned
                 len_current_task -= 1
 
             else:
@@ -287,13 +287,13 @@ class PPOAgent():
         return task_assign
     
     def create_state(self, env, current_tasklist, assigned_tasklist):
-        current_tasklist = copy.deepcopy(current_tasklist)#[[4,2,-1],[1,5,-1]][s,g,time]->s,gのonehotに
-        assigned_tasklist = copy.deepcopy(assigned_tasklist)#[[4,2,-1]]->エージェントごとのonehotに
+        current_tasklist = copy.deepcopy(current_tasklist)#[[4,2,-1],[1,5,-1]][s,g,time]->onehot of s,g
+        assigned_tasklist = copy.deepcopy(assigned_tasklist)#[[4,2,-1]]->onehot per agent
         onehot_obs = copy.deepcopy(env.obs_onehot)
         tensor_list = [torch.tensor(lst) for lst in onehot_obs]
         state = torch.cat(tensor_list, dim=0)
 
-        #current_tasklistのonehot化
+        #One-hot encoding of current_tasklist
         for _ in range(env.task_num):
             task_tensor = torch.zeros(env.n_nodes, dtype=torch.float32)
             if len(current_tasklist) > 0:
@@ -305,7 +305,7 @@ class PPOAgent():
                     pass
 
             state = torch.cat((state, task_tensor), dim=0)
-        #assignedされているエージェントを可視化
+        #Visualize assigned agents
         assigned = []
         for i in range(env.n_agents):
             if len(assigned_tasklist[i]) > 0:
@@ -331,7 +331,7 @@ class PPOAgent():
     def set_test_mode(self, mode_tf):
         self.test_mode = mode_tf
 
-    #エピソード終了時の処理
+    #Processing at the end of an episode
     def process_end_episode(self):
         self.buffer.rew_normalize()
         self.buffer.compute_returns(self.args.gamma)

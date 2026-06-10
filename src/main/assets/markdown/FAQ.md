@@ -53,14 +53,14 @@ Can a drone do "wait" action while being at the edge?
 Yes.
 
 #### Q2 
-Why did the green agent "wait" action for 2 steps in node 8 at [Pattern1](https://github.com/DrpChallenge/main/blob/main/assets/img/score_1.png)?
+Why did the green agent "wait" action for 2 steps in node 8 at [Pattern1](../img/score_1.png)?
 
 #### A2
 From an optimal viewpoint, there is no need to wait for  2 steps in node 8.
 We just showed a possibility.
 
 #### Q3
-In [Pattern1](https://github.com/DrpChallenge/main/blob/main/assets/img/score_1.png), when orange drone starts from node 3 and goes to node 0, the distance is 17, the number of move steps is 4, which results in 20. 
+In [Pattern1](../img/score_1.png), when orange drone starts from node 3 and goes to node 0, the distance is 17, the number of move steps is 4, which results in 20. 
 How to interpret this fact?
 
 #### A3
@@ -74,6 +74,6 @@ There are 2 possible actions for the agent, wait and move, and when an agent wan
 
 #### A4
 The action is to choose one of the nodes to move, rather than just move and wait.
-As illustrated in the description of [joint_action](https://github.com/DrpChallenge/main?tab=readme-ov-file#development), if it chooses a non-adjacent node , it will wait at the current position (node or edge). If the node chosen is an adjacent node, it will move one step forward to the node.
+As illustrated in the description of [joint_action](../../../../README.md#about-the-policy-implementation), if it chooses a non-adjacent node , it will wait at the current position (node or edge). If the node chosen is an adjacent node, it will move one step forward to the node.
 
 

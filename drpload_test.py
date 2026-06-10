@@ -17,7 +17,7 @@ env=gym.make("drp_env:drp-3agent_map_3x3-v2",
              goal_array = [4, 3, 1],
              task_flag = False)
 """
-#pbsのtest用の場合，設定ファイルも変える
+#For the pbs test, change the config file as well
 #[0, 8, 7] [4, 3, 1]
 #[3, 6, 8] [4, 2, 5]
 env=gym.make("drp_env:drp-3agent_map_3x3-v2", 
@@ -33,7 +33,7 @@ for _ in range(1000):
     #print("action_space", env.action_space)
     #print("observation_space", env.observation_space)
 
-    #PBSのtest用
+    #For the PBS test
     #"""
     actions = []
     with open("./src/config/default.yaml", 'r') as file:
@@ -83,7 +83,7 @@ for _ in range(1000):
 
 """
 
-#tasklistのtest用
+#For the tasklist test
 actions = []
 
 #print("obs", env.start_ori_array, env.goal_array)

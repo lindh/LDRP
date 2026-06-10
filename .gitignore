@@ -1,8 +1,11 @@
-/runs/
+runs/
 __pycache__/
 .DS_Store
+.vscode/
+*.egg-info/
 src/epymarl/results/
 logs/
 results/
 train_results/
 **/models/
+tmp_results/

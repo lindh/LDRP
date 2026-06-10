@@ -18,7 +18,7 @@ class AgentInfo:
 
 @dataclass
 class OtherAgentsInfo:
-    #各エージェントの位置をstep数分格納
+    #Store each agent's position for the number of steps
     other_agents_pos: List[List[Tuple[float,float]]]
 
 class PBS:
@@ -29,34 +29,34 @@ class PBS:
         self.schedule_actions = []
         self.goal_rec = []
         self.priority_rec = []
-        self.change_rec = [] #ノード上にいるエージェントを記録するリスト（優先度の変更に使う）
-        self.no_change_rec = [] #エッジ上にいるエージェントを記録
+        self.change_rec = [] #List recording agents on nodes (used for changing priority)
+        self.no_change_rec = [] #Record agents on edges
         self.tmp_goal_rec = [-1 for _ in range(self.num_agents)]
 
 
-    #優先度を決める（優先度リストを作る）
-    #優先度順に最短経路を決定
-    #最短経路の求め方
-    #環境の初期化（goal_arrayの設定）
-    #dequeの先頭のデータをとる(popleft)
-    #agentのデータを環境にセットする
-    #avail_actionの数だけstepを実行，ゴールしてたなら@へ
-    #衝突判定がないものでdataclassのインスタンスを作り，データを更新，dequeへ(append)
-    #@action_historyを参照してschedule_actionへ追加，pos_historyを参照してposを更新
+    #Decide priority (build the priority list)
+    #Determine shortest paths in priority order
+    #How to find the shortest path
+    #Initialize the environment (set goal_array)
+    #Take the head data of the deque (popleft)
+    #Set the agent's data into the environment
+    #Run steps for the number of avail_action; if reached goal, go to @
+    #Create a dataclass instance with no collision, update the data, and append to the deque
+    #@Refer to action_history to add to schedule_action; refer to pos_history to update pos
     def culc_actions(self, obs ,env):
         #AAAA
         #tmp = 0
         self.schedule_actions = [[] for _ in range(self.num_agents)]
-        #今：step × agent_num
+        #Current: step x agent_num
         #other_agents_infos = OtherAgentsInfo(other_agents_pos=[[] for _ in range(self.time_limit - env.step_account)])
-        #改：agent_num × step
+        #Revised: agent_num x step
         
         #tmp_list = [[] for _ in range(self.time_limit+1)]
         #other_agents_infos = OtherAgentsInfo(other_agents_pos=[[] for _ in range(self.num_agents)])
         other_agents_infos = OtherAgentsInfo(other_agents_pos=[[[] for _ in range(self.time_limit + 1)]
                                                                for _ in range(self.num_agents)])
 
-        #ノード上にいないエージェントの対応
+        #Handling agents not on a node
         self.fill_non_nodes_agents_pos_history(env, other_agents_infos)
         
         priority_list = self.get_priority(obs, env)
@@ -77,9 +77,9 @@ class PBS:
             
             near_goal_nodes = self.env.get_near_nodes(env.goal_array[i])
             while self.schedule_actions[i] == []:
-                #解がない場合，そのエージェントを最優先にして再計算
-                #agent_num回再計算したらどうする？
-                #current_goalに固定，Noneならcurrent_start
+                #If there is no solution, recompute with that agent at top priority
+                #What to do after recomputing agent_num times?
+                #Fix to current_goal; if None, current_start
                 if len(near_goal_nodes) == 0:
                     """
                     if i in self.change_rec:
@@ -100,7 +100,7 @@ class PBS:
                     recal_count += 1
                     
                     if recal_count >= self.num_agents:
-                        #print("再計算回数超過",i)
+                        #print("recompute count exceeded",i)
                         for j in range(self.num_agents):
                             if env.current_goal[j] is not None:
                                 self.schedule_actions[j] = [env.current_goal[j]] * self.time_limit
@@ -120,7 +120,7 @@ class PBS:
 
                 self.env.reset()
                 goal_flag = False
-                #重複する条件のための処理
+                #Processing for overlapping conditions
                 step_account_check = agent_info.step_account
                 visitted_states = set()
 
@@ -129,7 +129,7 @@ class PBS:
                     #AAAA
                     #tmp += 1
 
-                    #重複する条件のための処理
+                    #Processing for overlapping conditions
                     if step_account_check != current_agent_info.step_account:
                         visitted_states = set()
                         step_account_check = current_agent_info.step_account
@@ -144,7 +144,7 @@ class PBS:
 
                         obs, reward, done, info = self.env.step([action])
                         new_pos = (self.env.obs[0][0], self.env.obs[0][1])
-                        #重複する条件のための処理
+                        #Processing for overlapping conditions
                         new_state = (round(new_pos[0]), round(new_pos[1]), action)
                         if new_state in visitted_states:
                             continue
@@ -152,7 +152,7 @@ class PBS:
 
                         collision_flag = self.collision_detect(new_pos, other_agents_infos.other_agents_pos, current_agent_info.step_account+1, i)
                         
-                        if collision_flag == True:#衝突とゴールが同時の場合にバグが起こるためリセット
+                        if collision_flag == True:#Reset because a bug occurs when collision and goal happen simultaneously
                             #self.env.reset()
                             pass
 
@@ -171,14 +171,14 @@ class PBS:
                             
                             if all(done) is True:
                                 if info["goal"] == True:
-                                    #ゴールした後，そこに止まったときに優先度の高いエージェントと衝突しないか見るのを実装
-                                    #衝突する場合，continue
-                                    #print("ゴール発見")
+                                    #Implement checking whether stopping after reaching the goal collides with a higher-priority agent
+                                    #If it collides, continue
+                                    #print("goal found")
                                     if self.check_after_collision(new_agent_info, other_agents_infos.other_agents_pos, i) == True:
-                                        #print("ゴール後衝突発見")
+                                        #print("collision after goal found")
                                         continue
                                     else:
-                                        #print("ゴール後衝突なし")
+                                        #print("no collision after goal")
                                         pass
                                     """
                                     print("AAAAAA",new_agent_info.step_account)
@@ -186,8 +186,8 @@ class PBS:
                                     print(new_agent_info.pos_history)
                                     print(other_agents_infos.other_agents_pos)
                                     """
-                                    #今：各ステップ毎に格納（）
-                                    #改：各エージェント毎に格納（i番目に入れるだけ）
+                                    #Current: store per step ()
+                                    #Revised: store per agent (just put into the i-th)
                                     self.schedule_actions[i] = new_agent_info.action_history + new_agent_info.action_history[-1:]*(self.time_limit - len(new_agent_info.action_history))
 
                                     for _ in range(self.time_limit - len(new_agent_info.pos_history)+1):
@@ -219,7 +219,7 @@ class PBS:
     def fill_non_nodes_agents_pos_history(self, env, other_agents_infos: OtherAgentsInfo) -> None:
 
         for i in range(self.num_agents):
-            # ノード上にいない場合，ノードにつくまでの pos を other_agents_infos に格納
+            # If not on a node, store pos until reaching the node into other_agents_infos
             if env.pos[env.current_start[i]] != [env.obs[i][0], env.obs[i][1]]:
                 agent_info = AgentInfo(
                     pos=(env.obs[i][0], env.obs[i][1]),
@@ -257,27 +257,27 @@ class PBS:
     ###############################################
     def get_priority(self, obs, env):
         priority_list = []
-        change_list = []#ノード上にいるエージェントを記録するリスト
+        change_list = []#List recording agents on nodes
         no_change_list = []
         """
         for i in range(self.num_agents):
             path_length = env.get_path_length(env.current_start[i], env.goal_array[i])
             priority_list.append((i, path_length))
-        #遠いものを優先
+        #Prioritize farther ones
         #priority_list.sort(key=lambda x: x[1], reverse=True)
-        #近いものを優先
+        #Prioritize nearer ones
         priority_list.sort(key=lambda x: x[1], reverse=False)
         priority_list = [x[0] for x in priority_list]
         return priority_list
         """
-        #ノード上にいるエージェントを最後に追加
+        #Add agents on nodes at the end
         if self.priority_rec == []:
             for i in range(self.num_agents):
                 path_length = env.get_path_length(env.current_start[i], env.goal_array[i])
                 priority_list.append((i, path_length))
-            #遠いものを優先
+            #Prioritize farther ones
             #priority_list.sort(key=lambda x: x[1], reverse=True)
-            #近いものを優先
+            #Prioritize nearer ones
             priority_list.sort(key=lambda x: x[1], reverse=False)
             priority_list = [x[0] for x in priority_list]
             return priority_list
@@ -297,7 +297,7 @@ class PBS:
             return priority_list
         
     
-    #エージェントのxy座標(self.obs)環境にセットする
+    #Set the agent's xy coordinates (self.obs) into the environment
     #obs=tuple(array[],array[]...)
     def set_env_info(self, agent_infos, goal_array):
         self.env.set_1agent_info(pos=agent_infos.pos, 
@@ -306,9 +306,9 @@ class PBS:
                                  goal_array = goal_array,)
         return
     
-    #衝突判定
-    #step_tのときに，agent_posとother_agents_posが衝突するか
-    #1ステップ前後も見ることで，取り替えるエージェントとの衝突を防ぐ
+    #Collision detection
+    #Whether agent_pos and other_agents_pos collide at step_t
+    #Also checking one step before/after prevents collision with the swapped agent
     def collision_detect(self, agent_pos, other_agents_pos, step_t, agent_num):
         speed = 5
         collision_flag = False
@@ -328,8 +328,8 @@ class PBS:
 
         return collision_flag
     
-    #passを見つけた後，その後に衝突する恐れがないか確認
-    #2ステップだけ確認
+    #After finding a pass, check there is no risk of collision afterward
+    #Check only 2 steps
     def check_after_collision(self, agent_info, other_agents_pos, agent_num):
         collision_flag = False
         """
@@ -346,30 +346,30 @@ class PBS:
 
     def policy(self, obs, env):
         actions = []
-        #schedule_actionsが変なとき，初期化
+        #Initialize when schedule_actions is abnormal
         if self.schedule_actions != []:
             for i in range(self.num_agents):
                 if self.schedule_actions[i] == []:
                     self.schedule_actions = []
                     break
             
-        #だれかのゴールが変わったとき，計算し直す
+        #Recompute when someone's goal changes
         if self.goal_rec != env.goal_array:
             self.schedule_actions = []
 
-        #ゴール付近のノードで妥協している場合，いつ再計算をするか
-        #案1：tmpで途中のものを指定した時，そこについたら再計算：だれかのcurrent_startがtmp_goalと一致した時
-        ##その場に止まるものは除かない（除いたほうがいいかも）
+        #When compromising at a node near the goal, decide when to recompute
+        #Idea 1: when an intermediate node is specified as tmp, recompute upon arrival: when someone's current_start matches tmp_goal
+        ##Do not exclude those that stay in place (it might be better to exclude them)
         for i in range(self.num_agents):
             if env.current_start[i] == self.tmp_goal_rec[i]:
                 self.schedule_actions = []
                 break
 
-        #案2：なくなるまで実行：なにも書かない
+        #Idea 2: run until none remain: write nothing
         
 
         if self.schedule_actions == []:
-            #print("新たに計算")
+            #print("compute anew")
             self.culc_actions(obs, env)
             #print("schedule_actions", self.schedule_actions)
             #return [0 for _ in range(self.num_agents)]

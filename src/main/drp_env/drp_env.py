@@ -81,8 +81,8 @@ class DrpEnv(gym.Env):
 		# flag for tasklist
 		self.is_tasklist = task_flag
 		self.current_tasklist=[]
-		self.assigned_tasks=[]#エージェントが割り当てられたタスク(未ピックを含む)
-		self.assigned_list=[]#未実行のタスクとエージェントの割り当て表
+		self.assigned_tasks=[]#Tasks assigned to agents (including not-yet-picked-up)
+		self.assigned_list=[]#Assignment table of unexecuted tasks and agents
 		self.task_num = self.agent_num*2 # for tasklist, each agent can have 2 tasks at most
 		self.alltasks = task_list
 
@@ -196,13 +196,13 @@ class DrpEnv(gym.Env):
 			elif self.pos[int(action_i)][0]==self.obs[i][0] and self.pos[int(action_i)][1]==self.obs[i][1]:
 				self.obs_prepare.append(self.obs_current_chache[i])
 				self.wait_count[i] += 1
-				#pbsのため，その場待機でもcurrent_goalをNoneのままでないように変更
-				#従来のdrpは以下の行はなし
+				#For pbs, changed so current_goal is not left as None even when waiting in place
+				#The conventional drp does not have the following line
 				self.current_goal_prepare[i] = action_i
 			# if available ⇢ obs_prepare update by obs_i_
 			else:
 				#self.joint_action_old[i] = joint_action[i]
-				self.current_goal_prepare[i] = joint_action[i] #update 行き先ノード when avable action is taken
+				self.current_goal_prepare[i] = joint_action[i] #update destination node when avable action is taken
 				obs_i = self.obs[i]
 		
 				#calculate current distance
@@ -240,14 +240,14 @@ class DrpEnv(gym.Env):
 					self.obs_onehot_prepare[i][int(self.goal_array[i])+len(list(self.G.nodes()))] = 1 #current goal
 					
 					# update current_start only when arrive at node
-					self.current_start_prepare[i] = int(action_i) #update 出発ノード when　行き先ノード　has been arrived
-					self.current_goal_prepare[i] = None #update 行き先ノード when it has been arrived
+					self.current_start_prepare[i] = int(action_i) #update start node when destination node has been arrived
+					self.current_goal_prepare[i] = None #update destination node when it has been arrived
 
 					self.distance_from_start[i] += dist_to_cgoal
 
 				self.obs_prepare.append(obs_i_)
 		
-		# 2) !!!obs_prepare & obs_onehot_prepare!!! を持って、
+		# 2) hold !!!obs_prepare & obs_onehot_prepare!!! and,
 		# second judge whether to !!! obs & obs_onehot !!! according to collision happen
 		collision_flag = self.ee_env.collision_detect(self.obs_prepare)
 		info = {
@@ -397,7 +397,7 @@ class DrpEnv(gym.Env):
 		pre_pos_agenti = [self.obs_current_chache[i][0],self.obs_current_chache[i][1]]
 		pos_agenti = [self.obs[i][0],self.obs[i][1]]
 
-		if self.is_tasklist: #ここから
+		if self.is_tasklist: #from here
 			if self.start_ori_array[i] == self.goal_array[i]:
 				r_i = 0
 			else:

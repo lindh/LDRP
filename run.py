@@ -24,7 +24,7 @@ path_planner = [
 ]
 
 task_assigner = [
-    "fifo",
+    "random",
     "tp",
 ]
 #"""
@@ -49,7 +49,7 @@ for cmd in command:
 maxpurocesses = 5
 running_processes = []
 
-#logファイルのパス変更ver
+#Version with changed log file path
 for cmd in command:
     log_dir = "logs/" + str(cmd[2]) + "/safe"
     os.makedirs(log_dir, exist_ok=True)

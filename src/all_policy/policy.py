@@ -46,7 +46,7 @@ class MARLPolicy():
         return path
     
     def policy(self, obs, env):
-        #agent_idをtrueにしている場合，以下が必要
+        #The following is needed when agent_id is set to true
         #identity = np.eye(env.agent_num)
         #obs = np.concatenate([obs, identity], axis=1)
 

@@ -25,17 +25,17 @@ class SafeEnv(DrpEnv):
 		while do:
 			do = False
 			for i in range(self.agent_num):
-				#act8，他のエージェントと向かう先が同じ場合 
-				#自分がノード上にいる時
+				#act8, when the destination is the same as another agent's 
+				#When self is on a node
 				if self.current_goal[i] == None:
 					for j in range(self.agent_num):
 						if j != i and joint_action[i] == joint_action[j]: 
 							joint_action[i] = self.current_start[i] 
-							do = True #条件が変わる可能性があるため，もう一度ループを回す
+							do = True #The condition may change, so loop once more
 							break
 
-				#act9，正面衝突
-				#自分がノード上にいる時
+				#act9, head-on collision
+				#When self is on a node
 				if self.current_goal[i] == None:
 					for j in range(self.agent_num):
 						if j != i and (joint_action[j] == self.current_start[i] and joint_action[i] == self.current_start[j]):
