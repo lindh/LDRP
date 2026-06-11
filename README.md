@@ -17,7 +17,7 @@ a lifelong task stream, and a three-component task-management API.
 | `drpload_test.py` | Interactive GUI sanity check (see `src/main/README.md`) |
 | `src/main/` | The LDRP Gym environment (`drp_env`), maps (CSV), environment configs |
 | `src/all_policy/` | Path planners: `pbs.py` (prioritized planning, PP), `policy.py` (MARL model loader) |
-| `src/task_assign/` | Task allocation: `task_policy/random.py`, `task_policy/tp.py` (Token Passing) |
+| `src/task_assign/` | Task allocation: `task_policy/fifo.py` (FIFO), `task_policy/tp.py` (Token Passing's task-selection rule) |
 | `src/config/default.yaml` | Experiment configuration used by `test.py` |
 | `src/epymarl/` | EPyMARL framework used for training the learning baselines |
 
@@ -43,11 +43,11 @@ Baseline methods map to code options as follows:
 
 | Method | Code option | Notes |
 | --- | --- | --- |
-| PP (fixed-priority prioritized planner) | `path_planner: "pbs"` | Search-based; no trained model needed |
+| PP (prioritized planner) | `path_planner: "pbs"` | Search-based; no trained model needed (see "About pbs") |
 | IQL / QMIX | `path_planner: "iql"` / `"qmix"` | Loads a trained model (see below) |
 | SafeIQL / SafeQMIX | same as above + `safe_mode: true` | Safety layer replaces colliding actions |
-| Random | `task_assigner: "random"` | Legacy alias: `"fifo"` |
-| Token Passing (TP) | `task_assigner: "tp"` | |
+| FIFO (first-in, first-out) | `task_assigner: "fifo"` | Hands each idle agent the oldest unstarted task; legacy alias: `"random"` |
+| TP (task-selection rule of Token Passing) | `task_assigner: "tp"` | Nearest-pickup claims in turn; no token-held path reservations |
 
 Representative evaluation maps are `map_5x4` and `map_8x5` (simple maps with many short edges)
 and `map_aoba00` and `map_aoba01` (complex maps with fewer but longer edges). More maps are
@@ -131,8 +131,11 @@ Task assignment &rarr; the agent heads to the pickup location &rarr; the agent p
 
 ## About pbs
 
-The `pbs` planner option implements classical prioritized planning with a fixed priority
-ordering (also referred to as PP, to distinguish it from full Priority-Based Search, which
-searches over priority orderings). Because it moves agents in priority order, other agents may block the
-path, and DRP allows agents little freedom of action, so it may occasionally fail to find a
-collision-free path.
+The `pbs` planner option implements prioritized planning (referred to as PP, to distinguish
+it from full Priority-Based Search, which systematically searches over priority orderings):
+agents are planned one at a time by a space--time search at step resolution, keeping clearance
+from the reserved trajectories of already-planned agents. Priorities favor committed, mid-edge
+agents, and an agent for which no clear path is found is greedily promoted to the top and the
+team replanned. The planner never declares failure: when this priority repair is exhausted,
+agents hold or continue toward their current targets, so congestion shows up as low task
+completion rather than as an error.

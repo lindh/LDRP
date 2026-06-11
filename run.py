@@ -24,7 +24,7 @@ path_planner = [
 ]
 
 task_assigner = [
-    "random",
+    "fifo",
     "tp",
 ]
 #"""

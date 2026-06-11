@@ -8,7 +8,7 @@ time_limit: 1000      # step budget per episode
 safe_mode: false      # true = use the safety-layer environment (SafeIQL/SafeQMIX)
 
 # --- Policy ---
-task_assigner: "tp"   # "random" (legacy alias "fifo") | "tp" (Token Passing)
+task_assigner: "tp"   # "fifo" (first-in, first-out; legacy alias "random") | "tp" (Token Passing)
 path_planner: "pbs"   # "pbs" (prioritized planning, PP) | "iql" | "qmix" (the latter two need trained models)
 
 # --- Evaluation ---
