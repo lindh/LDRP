@@ -12,9 +12,8 @@ This repository accompanies the paper
 
 > Donghui Lin, Masahiro Kaji, Shiyao Ding, and Fumito Uwano.
 > **LDRP: A Configurable Benchmark for Lifelong Delivery Robot Routing Problems on Non-Grid Maps.**
-> In *PRICAI 2026: Trends in Artificial Intelligence* (23rd Pacific Rim International Conference on
-> Artificial Intelligence, Guangzhou, China, November 2026), Lecture Notes in Artificial Intelligence,
-> Springer. To appear.
+> In *23rd Pacific Rim International Conference on Artificial Intelligence (PRICAI 2026)*,
+> Guangzhou, China, November 2026, Lecture Notes in Artificial Intelligence, Springer. To appear.
 
 The paper formulates LDRP, describes this benchmark environment, and reports an
 allocation × planning baseline study (FIFO / TP × PP / IQL / QMIX / SafeIQL / SafeQMIX) on the four
@@ -25,7 +24,7 @@ please cite:
 @inproceedings{Lin2026LDRP,
   author    = {Lin, Donghui and Kaji, Masahiro and Ding, Shiyao and Uwano, Fumito},
   title     = {{LDRP}: A Configurable Benchmark for Lifelong Delivery Robot Routing Problems on Non-Grid Maps},
-  booktitle = {PRICAI 2026: Trends in Artificial Intelligence},
+  booktitle = {23rd Pacific Rim International Conference on Artificial Intelligence (PRICAI 2026)},
   series    = {Lecture Notes in Artificial Intelligence},
   publisher = {Springer},
   year      = {2026},
