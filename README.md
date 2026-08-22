@@ -1,4 +1,4 @@
-# LDRP: Lifelong Delivery Robot Routing Problems on Non-Grid Maps
+# LDRP: A Configurable Benchmark for Lifelong Delivery Robot Routing Problems on Non-Grid Maps
 
 LDRP is a configurable, Gym-based benchmark in which a team of delivery robots serves a continual stream of
 pickup-and-delivery tasks on a non-grid route network while avoiding collisions. A policy combines
