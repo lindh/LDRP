@@ -4,7 +4,8 @@ LDRP is a configurable, Gym-based benchmark in which a team of delivery robots s
 pickup-and-delivery tasks on a non-grid route network while avoiding collisions. A policy combines
 a **task-allocation** method with a **path-planning** method, and any pair can be swapped in.
 The environment extends the DRP benchmark of Ding et al. with an integrated allocation interface,
-a lifelong task stream, and a three-component task-management API.
+a lifelong task stream, a three-component task-management API, and observation and reward
+definitions that expose each agent's assigned task.
 
 ## Publication
 
@@ -76,7 +77,8 @@ Baseline methods map to code options as follows:
 | TP (task-selection rule of Token Passing) | `task_assigner: "tp"` | Nearest-pickup claims in turn; no token-held path reservations |
 
 Representative evaluation maps are `map_5x4` and `map_8x5` (simple maps with many short edges)
-and `map_aoba00` and `map_aoba01` (complex maps with fewer but longer edges). More maps are
+and `map_aoba00` and `map_aoba01` (complex real-road maps: sparser connectivity per node, and
+some edges take far more steps to cross). More maps are
 available under `src/main/drp_env/map/`; a map is defined by CSV node/edge files, so new maps
 need no code changes.
 
@@ -94,8 +96,11 @@ python3 test.py map_8x5 4 pbs tp
 ```
 
 The script prints average **task completion** (TC) and average **execution time** (ET) per
-episode. For stable numbers, average many episodes per condition (e.g., `test_num: 1000`) and,
-for the learning methods, multiple independently trained models.
+episode. The result table in the paper follows this protocol: 10 evaluation episodes per
+condition; IQL/QMIX and their safe variants are then averaged over 5 models trained with
+different seeds, and the model-to-model spread is the reported standard deviation; PP carries
+no learned weights and behaves deterministically, so one run per condition suffices. Larger
+episode counts (e.g., `test_num: 1000`) smooth the averages further when compute allows.
 
 To sweep many conditions as a batch experiment, edit the lists at the top of `run.py` and run
 `python3 run.py`; per-condition logs are written under `logs/`.
@@ -140,7 +145,9 @@ Example) Given the task list `[[1,2],[5,3],[8,9]]` and the assignment `[1,0,-1]`
 
 ## About Task Generation and Processing
 
-Tasks are added to `env.current_tasklist` at each step.
+Tasks are added to `env.current_tasklist`, one per step, as long as that list holds fewer
+than `2 × agent_num` entries (`task_num` in `drp_env.py`); arrivals pause while the list is
+full and resume once agents pick tasks up.
 When and what kind of tasks are added is decided at the start of each episode, so runs are
 reproducible. To run in an environment with tasks enabled, set the `task_flag` argument of
 `gym.make` to `True`. To use your own task set instead of randomly generated tasks, pass your
