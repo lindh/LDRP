@@ -62,25 +62,29 @@ dependency versions and carry no result data.
 `condition,metric,n_seeds,mean,std,sem,per_seed`. `std` is the sample standard deviation
 (denominator `n_seeds - 1`) and `sem` is `std / sqrt(n_seeds)`; `per_seed` lists the
 individual run values, seed 0 first. For the learning methods `n_seeds = 5` and `std` is
-therefore the model-to-model spread reported as `+- s.d.` in the paper; PP is deterministic
-and run once per condition, so `n_seeds = 1` and `std`/`sem` are `nan`.
+therefore the model-to-model spread reported as `+- s.d.` in the paper. PP carries no learned
+weights and is costly to run, so it was measured once per condition: `n_seeds = 1` and
+`std`/`sem` are `nan`.
 
 Every row of `summary.csv` is reproducible from the `logs/` files shipped here.
 
 ## Coverage against the published table
 
-Of the 120 conditions in the paper's result table, 119 are backed by the logs here and their
-TC and ET values agree with `summary.csv`. Two provenance notes:
+Of the 120 conditions in the paper's result table, 119 are backed by the logs here, and their
+TC and ET values agree with `summary.csv`. PP is costly to run, so each of its conditions was
+measured once, and on `map_8x5` a later run took the place of three of those logs. That leaves
+two notes:
 
-- `map_8x5/4agent/unsafe_pbs_fifo` (published TC 93, ET 2189.84 s) is carried over from an
-  earlier PP run rather than re-measured in this campaign, so it has no log here and no row in
-  `summary.csv`. PP is deterministic, so its TC is unaffected by the reuse.
+- `map_8x5/4agent/unsafe_pbs_fifo` (published TC 93, ET 2189.84 s): the log of the run behind
+  this cell is no longer available, because a later attempt aborted on an interpreter-level
+  fault in a dependency and replaced it. The condition therefore has no log here and no row in
+  `summary.csv`.
 - `map_8x5/3agent/unsafe_pbs_tp`: the log included here gives ET 1023.19 s against the
-  published 1066.5 s, because this condition was timed again after the table was fixed. TC
+  published 1066.5 s, the condition having been timed again after the table was fixed. TC
   (91.7) is identical. PP's execution time is wall-clock time from an unoptimized
   single-threaded planner and is sensitive to machine load; the paper states that its ET values
   bound this implementation rather than the search paradigm.
 
-For `map_8x5/3agent/unsafe_pbs_fifo`, likewise re-timed, both runs are kept:
-`..._seed0.txt` is the run behind the published ET (989.737 s) and `..._seed0_rerun.txt` is the
-repeat (962.568 s). TC (72.9) is identical in both.
+For `map_8x5/3agent/unsafe_pbs_fifo`, also timed again, both logs are kept: `..._seed0.txt` is
+the run behind the published ET (989.737 s) and `..._seed0_rerun.txt` is the later one
+(962.568 s). TC (72.9) is identical in both.
