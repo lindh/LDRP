@@ -1,0 +1,32 @@
+Gym has been unmaintained since 2022 and does not support NumPy 2.0 amongst other critical functionality.
+Please upgrade to Gymnasium, the maintained drop-in replacement of Gym, or contact the authors of your software and request that they upgrade.
+Users of this version of Gym should be able to simply replace 'import gym' with 'import gymnasium as gym' in the vast majority of cases.
+See the migration guide at https://gymnasium.farama.org/introduction/migration_guide/ for additional information.
+[test] env=drp_env:drp-5agent_map_5x4-v2  model_seed=0  planner=pbs  pbs_mode=True
+/opt/miniconda3/envs/ldrp/lib/python3.9/site-packages/gym/spaces/box.py:127: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(f"Box bound precision lowered by casting to {self.dtype}")
+/opt/miniconda3/envs/ldrp/lib/python3.9/site-packages/gym/utils/passive_env_checker.py:174: UserWarning: [33mWARN: Future gym versions will require that `Env.reset` can be passed a `seed` instead of using `Env.seed` for resetting the environment random number generator.[0m
+  logger.warn(
+/opt/miniconda3/envs/ldrp/lib/python3.9/site-packages/gym/utils/passive_env_checker.py:187: UserWarning: [33mWARN: Future gym versions will require that `Env.reset` can be passed `options` to allow the environment initialisation to be passed additional information.[0m
+  logger.warn(
+/opt/miniconda3/envs/ldrp/lib/python3.9/site-packages/gym/utils/passive_env_checker.py:195: UserWarning: [33mWARN: The result returned by `env.reset()` was not a tuple of the form `(obs, info)`, where `obs` is a observation and `info` is a dictionary containing additional information. Actual type: `<class 'numpy.ndarray'>`[0m
+  logger.warn(
+/opt/miniconda3/envs/ldrp/lib/python3.9/site-packages/gym/utils/passive_env_checker.py:219: DeprecationWarning: [33mWARN: Core environment is written in old step API which returns one bool instead of two. It is recommended to rewrite the environment with new step API. [0m
+  logger.deprecation(
+/opt/miniconda3/envs/ldrp/lib/python3.9/site-packages/gym/utils/passive_env_checker.py:225: DeprecationWarning: `np.bool8` is a deprecated alias for `np.bool_`.  (Deprecated NumPy 1.24)
+  if not isinstance(done, (bool, np.bool8)):
+/opt/miniconda3/envs/ldrp/lib/python3.9/site-packages/gym/utils/passive_env_checker.py:226: UserWarning: [33mWARN: Expects `done` signal to be a boolean, actual type: <class 'list'>[0m
+  logger.warn(
+/opt/miniconda3/envs/ldrp/lib/python3.9/site-packages/gym/utils/passive_env_checker.py:149: UserWarning: [33mWARN: The obs returned by the `step()` method was expecting a tuple, actual type: <class 'numpy.ndarray'>[0m
+  logger.warn(f"{pre} was expecting a tuple, actual type: {type(obs)}")
+/opt/miniconda3/envs/ldrp/lib/python3.9/site-packages/gym/utils/passive_env_checker.py:141: UserWarning: [33mWARN: The obs returned by the `step()` method was expecting numpy array dtype to be float32, actual type: float64[0m
+  logger.warn(
+/opt/miniconda3/envs/ldrp/lib/python3.9/site-packages/gym/utils/passive_env_checker.py:165: UserWarning: [33mWARN: The obs returned by the `step()` method is not within the observation space.[0m
+  logger.warn(f"{pre} is not within the observation space.")
+/opt/miniconda3/envs/ldrp/lib/python3.9/site-packages/gym/utils/passive_env_checker.py:252: UserWarning: [33mWARN: The reward returned by `step()` must be a float, int, np.integer or np.floating, actual type: <class 'list'>[0m
+  logger.warn(
+Test Episode 10/10 completed.
+Average task completion: 147.2
+平均実行時間: 3478.769940575 秒
+[RESULT] condition=map_5x4/5agent/unsafe_pbs_fifo model_seed=0 n_ep=10 time_limit=1000 eval_seed=0 episode_seed_base=10000 step=1000 goal_account=288.8 1agent_goal_account=57.76 task_completion=147.2 collision_rate=0 time_sec=3478.77
+Environment CLOSE

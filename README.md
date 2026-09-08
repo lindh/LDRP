@@ -47,6 +47,7 @@ please cite:
 | `src/task_assign/` | Task allocation: `task_policy/fifo.py` (FIFO), `task_policy/tp.py` (Token Passing's task-selection rule) |
 | `src/config/default.yaml` | Experiment configuration used by `test.py` |
 | `src/epymarl/` | EPyMARL framework used for training the learning baselines |
+| `eval_results/` | Released evaluation logs, aggregated summary, and trained weights behind the paper's result table |
 
 ## Installation
 
@@ -107,15 +108,22 @@ To sweep many conditions as a batch experiment, edit the lists at the top of `ru
 
 ### Trained Models
 
-Model weights are not bundled. Train IQL/QMIX with EPyMARL — `train.py` shows the invocation
-(edit the `env_args.key` to choose map/team size; `drp_safe-*` keys train with the safety
-layer) — then place the resulting weights at:
+The `MARLPolicy` class in `src/all_policy/policy.py` loads a single weight file from one fixed
+location, for plain and safety-wrapped runs alike:
 
 ```
 src/all_policy/models/safe/<map_name>_<agent_num>_<path_planner>.th   (e.g. map_8x5_4_qmix.th)
 ```
 
-which is where the `MARLPolicy` class in `src/all_policy/policy.py` loads them from.
+The weights used for the paper's result table are released under `eval_results/models/` —
+five seeds for every map, team size, learner, and training environment. Copy the file for the
+condition you want to the path above (its name drops the trailing `_<safe|unsafe>_seed<k>`) and
+set `safe_mode` to match the tag. See [`eval_results/README.md`](eval_results/README.md) for
+the naming scheme and for the raw logs the table was computed from.
+
+To train your own instead, use EPyMARL — `train.py` shows the invocation (edit the
+`env_args.key` to choose map/team size; `drp_safe-*` keys train with the safety layer) — and
+write the result to the same path.
 
 ## About the Policy Implementation
 

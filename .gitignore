@@ -9,3 +9,7 @@ results/
 train_results/
 **/models/
 tmp_results/
+
+# Released evaluation artifacts (see eval_results/README.md)
+!eval_results/logs/
+!eval_results/models/
